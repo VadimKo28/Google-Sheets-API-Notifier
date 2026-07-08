@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"google_sheets_api/internal/config"
+	"google_sheets_api/internal/handler"
+	"google_sheets_api/internal/server"
 	"log"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -17,14 +20,18 @@ func main() {
     }
 
 	cfg := config.NewConfig()
-
 	log.Print("Config Load")
 
 	spreadsheetId := cfg.SpreadsSheetID
 	readRange := cfg.ReadRange
 
-
 	ctx := context.Background()
+
+	handler := handler.New()
+	server := server.New(handler, gin.Default())
+	server.Register()
+	server.Run()
+	
 
 	srv, err := sheets.NewService(ctx, option.WithAuthCredentialsFile(option.ServiceAccount, "my-sheets-integration-501715-8e3105270262.json"))
 	if err != nil {

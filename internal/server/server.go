@@ -1,0 +1,26 @@
+package server
+
+import (
+	"google_sheets_api/internal/handler"
+
+	"github.com/gin-gonic/gin"
+)
+
+type Server struct{
+	handler *handler.Handler
+	router *gin.Engine
+}
+
+func New(handler *handler.Handler, router *gin.Engine) *Server {
+  return &Server{
+	handler: handler,
+  }
+}
+
+func(srv *Server) Register() {
+  srv.router.GET("/sheets", srv.handler.GetSheets)
+}
+
+func (srv *Server) Run() {
+	srv.router.Run(":8080")
+}
