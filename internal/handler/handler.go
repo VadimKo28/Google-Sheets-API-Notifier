@@ -1,17 +1,27 @@
 package handler
 
-import "github.com/gin-gonic/gin"
+import (
+	"context"
+	"google_sheets_api/internal/domain"
+	"github.com/gin-gonic/gin"
+)
 
 type Handler struct {
-
+  servise GoogleSheets
 }
 
-func New() *Handler {
-	return &Handler{}
+type GoogleSheets interface {
+  GetAndMappingSheets(c context.Context)([]domain.Event, error)
+}
+
+func New(service GoogleSheets) *Handler {
+	return &Handler{	
+		servise: service,
+	}
 }
 
 func (h *Handler) GetSheets(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "Hello",
-	})
+  event, _ := h.servise.GetAndMappingSheets(c.Request.Context())
+
+  c.JSON(200, event)
 }

@@ -14,6 +14,7 @@ type Server struct{
 func New(handler *handler.Handler, router *gin.Engine) *Server {
   return &Server{
 	handler: handler,
+	router: router,
   }
 }
 
