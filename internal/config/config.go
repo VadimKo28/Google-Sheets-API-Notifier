@@ -10,6 +10,8 @@ import (
 type Config struct {
 	SpreadsSheetID string
   ReadRange string
+  AppPassword string
+  GmailUser string
 }
 
 func NewConfig() *Config {
@@ -19,6 +21,16 @@ func NewConfig() *Config {
 
   spreadsheetId := os.Getenv("GOOGLE_SPREADS_SHEET_ID")
   readRange := os.Getenv("GOOGLE_SHEET_READ_RANGE")
+  appPassword := os.Getenv("GMAIL_APP_PASSWORD")
+  gmailUser := os.Getenv("GMAIL_USER")
+
+  if gmailUser == "" {
+    log.Fatal("GMAIL_USER не задан в переменных окружения")
+  }
+
+  if appPassword == "" {
+    log.Fatal("GMAIL_APP_PASSWORD не задан в переменных окружения")
+  }
 
   if spreadsheetId == "" {
     log.Fatal("GOOGLE_SPREADS_SHEET_ID не задан в переменных окружения")
@@ -28,10 +40,10 @@ func NewConfig() *Config {
     log.Fatal("GOOGLE_SHEET_READ_RANGE не задан в переменных окружения")
   }
 
-  log.Print("Config loaded")
-
 	return &Config{
 	  SpreadsSheetID: spreadsheetId,
     ReadRange: readRange,
+    AppPassword: appPassword,
+    GmailUser: gmailUser,
 	}
 }

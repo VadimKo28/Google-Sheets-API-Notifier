@@ -7,8 +7,8 @@ import (
 	"google_sheets_api/internal/lib/logger"
 	"google_sheets_api/internal/server"
 	"google_sheets_api/internal/service"
+	"google_sheets_api/pkg/mail"
 	"log/slog"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,7 +17,7 @@ func main() {
 
 	log := logger.LoggerSetup()
 
-    ctx := context.Background()
+  ctx := context.Background()
 	spreadsheetId := cfg.SpreadsSheetID
 	readRange := cfg.ReadRange
 
@@ -31,5 +31,24 @@ func main() {
 	handler := handler.New(service)
 	server := server.New(handler, gin.New())
 	server.Register()
-	server.Run()
+  
+  client := mail.NewMailClient(
+    cfg.GmailUser,   // username — для SMTP-аутентификации
+    cfg.AppPassword,    // appPassword - "sayrymzexbixjvqa"
+    cfg.GmailUser,   // from — что увидит получатель в поле "От кого"
+	  log,
+  )
+
+  err = client.Send(
+    cfg.GmailUser,
+		"Данные из таблицы",
+		"<h1>Отчёт</h1><p>Данные успешно обработаны.</p>",
+	)
+
+	if err != nil {
+		log.Error("failed to send email: %v", "error", err)
+	}
+
+  server.Run()
+
 }
