@@ -21,7 +21,12 @@ func New(service GoogleSheets) *Handler {
 }
 
 func (h *Handler) GetSheets(c *gin.Context) {
-  event, _ := h.servise.GetAndMappingSheets(c.Request.Context())
+  event, err := h.servise.GetAndMappingSheets(c.Request.Context())
+
+  if err != nil {
+	c.JSON(500, err)
+	return
+  }
 
   c.JSON(200, event)
 }

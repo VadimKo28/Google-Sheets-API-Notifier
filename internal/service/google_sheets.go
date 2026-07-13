@@ -2,24 +2,38 @@ package service
 
 import (
 	"context"
-	"google_sheets_api/internal/client/google_sheets"
 	"google_sheets_api/internal/domain"
+	"google_sheets_api/pkg/clients/google"
+	"log/slog"
+  mapper "google_sheets_api/internal/lib/google"
+
 )
 
 type GoogleSheetsService struct {
-  client *google_sheets.GoogleSheetsClient
+  client *google.GoogleSheetsClient
+  logger *slog.Logger
 }
 
-func NewGoogleSheetsService(ctx context.Context, spreadsheetId string, readRange string) *GoogleSheetsService {
-  client := google_sheets.NewGoogleSheetsClient(ctx, spreadsheetId, readRange)
+func NewGoogleSheetsService(ctx context.Context, spreadsheetId string, readRange string, logger *slog.Logger) (*GoogleSheetsService, error) {
+  client, err := google.NewGoogleSheetsClient(ctx, spreadsheetId, readRange, logger)
 
-  return &GoogleSheetsService{client: client}
+  if err != nil {
+    logger.Error("error create service", slog.Any("error", err))
+    return nil, err
+  }
+
+  return &GoogleSheetsService{client: client, logger: logger}, nil
 }
 
 func (s *GoogleSheetsService) GetAndMappingSheets(ctx context.Context) ([]domain.Event, error){
-  v, _ := s.client.GetValues()
+  v, err := s.client.GetValues()
 
-  return MapRowsToEvents(v.Values)
+  if err != nil {
+    s.logger.Error("error get values", slog.Any("error", err))
+    return nil, err
+  }
+
+  return mapper.MapRowsToEvents(v.Values)
 }
 
 
