@@ -7,7 +7,7 @@ import (
 	"google_sheets_api/internal/lib/logger"
 	"google_sheets_api/internal/server"
 	"google_sheets_api/internal/service"
-	"google_sheets_api/pkg/mail"
+	"google_sheets_api/pkg/gmail"
 	"log/slog"
 	"github.com/gin-gonic/gin"
 )
@@ -32,9 +32,9 @@ func main() {
 	server := server.New(handler, gin.New())
 	server.Register()
   
-  client := mail.NewMailClient(
-    cfg.GmailUser,   // username — для SMTP-аутентификации
-    cfg.AppPassword,    // appPassword - "sayrymzexbixjvqa"
+  client := gmail.NewClient(
+    cfg.GmailUser,  
+    cfg.AppPassword, 
     cfg.GmailUser,   // from — что увидит получатель в поле "От кого"
 	  log,
   )
@@ -42,7 +42,7 @@ func main() {
   err = client.Send(
     cfg.GmailUser,
 		"Данные из таблицы",
-		"<h1>Отчёт</h1><p>Данные успешно обработаны.</p>",
+		"<h1>Отчёт</h1><p>Данные успешно обработаны !!!!!.</p>",
 	)
 
 	if err != nil {

@@ -11,7 +11,7 @@ type Handler struct {
 }
 
 type GoogleSheets interface {
-  GetAndMappingSheets(c context.Context)([]domain.Event, error)
+  GetAndMappingSheets(c context.Context)([]domain.GoogleSheetElement, error)
 }
 
 func New(service GoogleSheets) *Handler {

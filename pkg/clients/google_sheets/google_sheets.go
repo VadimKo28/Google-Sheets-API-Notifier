@@ -1,4 +1,4 @@
-package google
+package google_sheets
 
 import (
 	"context"
@@ -15,7 +15,7 @@ type GoogleSheetsClient struct {
   logger *slog.Logger
 }
 
-func NewGoogleSheetsClient(ctx context.Context, spreadsheetId string, readRange string, logger *slog.Logger) (*GoogleSheetsClient, error) {
+func NewClient(ctx context.Context, spreadsheetId string, readRange string, logger *slog.Logger) (*GoogleSheetsClient, error) {
   srv, err := sheets.NewService(ctx, option.WithAuthCredentialsFile(option.ServiceAccount, "my-sheets-integration-501715-8e3105270262.json"))
 
   if err != nil {
