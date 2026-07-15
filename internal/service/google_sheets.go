@@ -3,18 +3,20 @@ package service
 import (
 	"context"
 	"google_sheets_api/internal/domain"
+	mapper "google_sheets_api/internal/lib/google"
+	"google_sheets_api/internal/repository/event"
 	"google_sheets_api/pkg/clients/google_sheets"
 	"log/slog"
-  mapper "google_sheets_api/internal/lib/google"
 
 )
 
 type GoogleSheetsService struct {
   client *google_sheets.GoogleSheetsClient
   logger *slog.Logger
+  repository *event.EventRepository
 }
 
-func NewGoogleSheetsService(ctx context.Context, spreadsheetId string, readRange string, logger *slog.Logger) (*GoogleSheetsService, error) {
+func NewGoogleSheetsService(ctx context.Context, spreadsheetId string, readRange string, logger *slog.Logger, repository *event.EventRepository) (*GoogleSheetsService, error) {
   client, err := google_sheets.NewClient(ctx, spreadsheetId, readRange, logger)
 
   if err != nil {
@@ -22,10 +24,10 @@ func NewGoogleSheetsService(ctx context.Context, spreadsheetId string, readRange
     return nil, err
   }
 
-  return &GoogleSheetsService{client: client, logger: logger}, nil
+  return &GoogleSheetsService{client: client, logger: logger, repository: repository}, nil
 }
 
-func (s *GoogleSheetsService) GetAndMappingSheets(ctx context.Context) ([]domain.GoogleSheetElement, error){
+func (s *GoogleSheetsService) GetSheets(ctx context.Context) ([]domain.GoogleSheetElement, error){
   v, err := s.client.GetValues()
 
   if err != nil {
@@ -33,12 +35,39 @@ func (s *GoogleSheetsService) GetAndMappingSheets(ctx context.Context) ([]domain
     return nil, err
   }
 
-  return mapper.MapRowsToEvents(v.Values)
+  rawData := v.Values
+
+  mapData, err := mapper.MapRowsToEvents(rawData)
+
+  return mapData, err
+}
+
+func (s *GoogleSheetsService) SaveEvents(ctx context.Context, events []domain.GoogleSheetElement) error {
+
+  if err := s.repository.Save(ctx, events); err != nil {
+    s.logger.Error("error save events", slog.Any("error", err))
+    return err
+  }
+
+  return nil
+}
+
+func (s *GoogleSheetsService) SyncSheets(ctx context.Context) error{
+  sheets, err := s.GetSheets(ctx)
+
+  if err != nil {
+    s.logger.Error("error sync sheets", slog.Any("error", err))
+    return err
+  }
+
+  s.SaveEvents(ctx, sheets)
+
+  return nil
 }
 
 
 
-func (s *GoogleSheetsService) Notify() {
+func (s *GoogleSheetsService) SendMail() {
   panic("not implement")
 }
 

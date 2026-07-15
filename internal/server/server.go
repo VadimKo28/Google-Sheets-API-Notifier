@@ -18,7 +18,7 @@ func New(handler *handler.Handler, router *gin.Engine) *Server {
 }
 
 func(srv *Server) Register() {
-  srv.router.GET("/sheets", srv.handler.GetSheets)
+  srv.router.GET("/sync_sheets", srv.handler.SyncSheets)
 }
 
 func (srv *Server) Run() {

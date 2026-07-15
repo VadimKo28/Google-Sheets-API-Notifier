@@ -12,6 +12,7 @@ type Config struct {
   ReadRange string
   AppPassword string
   GmailUser string
+  PostgresConnStr string
 }
 
 func NewConfig() *Config {
@@ -23,6 +24,11 @@ func NewConfig() *Config {
   readRange := os.Getenv("GOOGLE_SHEET_READ_RANGE")
   appPassword := os.Getenv("GMAIL_APP_PASSWORD")
   gmailUser := os.Getenv("GMAIL_USER")
+  postgresConnStr := os.Getenv("DB_STRING")
+
+  if postgresConnStr == "" {
+    log.Fatal("DB_STRING не задан в переменных окружения")
+  }
 
   if gmailUser == "" {
     log.Fatal("GMAIL_USER не задан в переменных окружения")
@@ -45,5 +51,6 @@ func NewConfig() *Config {
     ReadRange: readRange,
     AppPassword: appPassword,
     GmailUser: gmailUser,
+    PostgresConnStr: postgresConnStr,
 	}
 }

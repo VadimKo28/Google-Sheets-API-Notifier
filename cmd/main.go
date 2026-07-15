@@ -7,8 +7,11 @@ import (
 	"google_sheets_api/internal/lib/logger"
 	"google_sheets_api/internal/server"
 	"google_sheets_api/internal/service"
-	"google_sheets_api/pkg/gmail"
+	"google_sheets_api/pkg/clients/gmail"
+	"google_sheets_api/pkg/clients/postgres"
+  "google_sheets_api/internal/repository/event"
 	"log/slog"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,11 +20,22 @@ func main() {
 
 	log := logger.LoggerSetup()
 
-  ctx := context.Background()
+	db, err := postgres.NewClient(context.Background(), cfg.PostgresConnStr)
+
+  repository := event.NewEventRepository(db)
+
+	if err != nil {
+	  log.Error("error connect to postgres", slog.Any("error", err))
+	  return
+	} else {
+	  log.Info("connect to postgres")
+	}
+
+    ctx := context.Background()
 	spreadsheetId := cfg.SpreadsSheetID
 	readRange := cfg.ReadRange
 
-	service, err := service.NewGoogleSheetsService(ctx, spreadsheetId, readRange, log)
+	service, err := service.NewGoogleSheetsService(ctx, spreadsheetId, readRange, log, repository)
 
 	if err != nil {
 		log.Error("error create service", slog.Any("error", err))

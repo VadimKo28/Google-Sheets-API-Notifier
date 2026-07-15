@@ -20,6 +20,7 @@ func MapRowsToEvents(raw [][]interface{}) ([]domain.GoogleSheetElement, error) {
 		events = append(events, domain.GoogleSheetElement{
 			Date: date,
 			Name: name,
+			Execute: false,
 		})
 	}
 

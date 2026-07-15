@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"google_sheets_api/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,7 +10,7 @@ type Handler struct {
 }
 
 type GoogleSheets interface {
-  GetAndMappingSheets(c context.Context)([]domain.GoogleSheetElement, error)
+  SyncSheets(c context.Context)( error)
 }
 
 func New(service GoogleSheets) *Handler {
@@ -20,13 +19,13 @@ func New(service GoogleSheets) *Handler {
 	}
 }
 
-func (h *Handler) GetSheets(c *gin.Context) {
-  event, err := h.servise.GetAndMappingSheets(c.Request.Context())
+func (h *Handler) SyncSheets(c *gin.Context) {
+  err := h.servise.SyncSheets(c.Request.Context())
 
   if err != nil {
 	c.JSON(500, err)
 	return
   }
 
-  c.JSON(200, event)
+  c.JSON(200, nil)
 }
