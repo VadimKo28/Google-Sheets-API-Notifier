@@ -6,22 +6,27 @@ import (
 )
 
 type Handler struct {
-  servise GoogleSheets
+  GoogleSheetsService GoogleSheetsSyncer
+  EvventNotifierSrvice EventNotifier
 }
 
-type GoogleSheets interface {
+type EventNotifier interface {
+  CheckEventsToday(c context.Context) error
+}
+
+type GoogleSheetsSyncer interface {
   SyncSheets(c context.Context) error
-  CheckEventsToday() error
 }
 
-func New(service GoogleSheets) *Handler {
+func New(googleService GoogleSheetsSyncer, eventService EventNotifier) *Handler {
 	return &Handler{	
-		servise: service,
+		GoogleSheetsService: googleService, 
+    EvventNotifierSrvice: eventService,
 	}
 }
 
 func (h *Handler) SyncSheets(c *gin.Context) {
-  err := h.servise.SyncSheets(c.Request.Context())
+  err := h.GoogleSheetsService.SyncSheets(c.Request.Context())
 
   if err != nil {
 	c.JSON(500, err)
@@ -32,7 +37,7 @@ func (h *Handler) SyncSheets(c *gin.Context) {
 }
 
 func (h *Handler) CheckEvents(c *gin.Context) {
-  err := h.servise.CheckEventsToday()
+  err := h.EvventNotifierSrvice.CheckEventsToday(c.Request.Context())
 
   if err != nil {
 	c.JSON(500, err)

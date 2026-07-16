@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"google_sheets_api/internal/domain"
 	"log/slog"
+	"time"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -45,29 +47,32 @@ func (r *EventRepository) Save(ctx context.Context, rows []domain.GoogleSheetEle
 	return tx.Commit(ctx)
 }
 
-func (r *EventRepository) GetAll(ctx context.Context) ([]domain.GoogleSheetElement, error) {
-  query := `
-    SELECT event_date, name, execute
-    FROM events
-  `
-  rows, err := r.db.Query(ctx, query)
-  
-  if err != nil {
-    r.logger.Error("error get all events", slog.Any("error", err))
-    return nil, err
-  }
-  defer rows.Close()
+func (r *EventRepository) GetByDate(ctx context.Context, date time.Time) ([]domain.GoogleSheetElement, error) {
+  dateStr := date.Format("02.01")
 
-  events := make([]domain.GoogleSheetElement, 0)
+	rows, err := r.db.Query(ctx,
+		`SELECT event_date, name, execute FROM events WHERE event_date = $1`,
+		dateStr,
+	)
+	if err != nil {
+    r.logger.Error("failed to query events", slog.Any("error", err))
+		return nil, fmt.Errorf("failed to query events: %w", err)
+	}
+	defer rows.Close()
 
-  for rows.Next() {
-    var event domain.GoogleSheetElement
-    if err := rows.Scan(&event.Date, &event.Name, &event.Execute); err != nil {
-      r.logger.Error("error scan row", slog.Any("error", err))
-      return nil, err
-    }
-    events = append(events, event)
-  }
+	var events []domain.GoogleSheetElement
+	for rows.Next() {
+		var e domain.GoogleSheetElement
+		if err := rows.Scan(&e.Date, &e.Name, &e.Execute); err != nil {
+      r.logger.Error("failed to scan event", slog.Any("error", err))
+			return nil, fmt.Errorf("failed to scan event: %w", err)
+		}
+		events = append(events, e)
+	}
+	if err := rows.Err(); err != nil {
+    r.logger.Error("rows error", slog.Any("error", err))
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
 
-  return events, nil
+	return events, nil
 }

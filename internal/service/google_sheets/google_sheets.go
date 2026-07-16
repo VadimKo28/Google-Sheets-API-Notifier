@@ -1,34 +1,33 @@
-package service
+package google_sheets
 
 import (
 	"context"
 	"google_sheets_api/internal/domain"
 	mapper "google_sheets_api/internal/lib/google"
 	"google_sheets_api/internal/repository/event"
-	"google_sheets_api/pkg/clients/google_sheets"
 	"log/slog"
 
+	"google.golang.org/api/sheets/v4"
 )
 
 type GoogleSheetsService struct {
-  client *google_sheets.GoogleSheetsClient
+  sheetsClient SheetsClient
   logger *slog.Logger
   repository *event.EventRepository
 }
 
-func NewGoogleSheetsService(ctx context.Context, spreadsheetId string, readRange string, logger *slog.Logger, repository *event.EventRepository) (*GoogleSheetsService, error) {
-  client, err := google_sheets.NewClient(ctx, spreadsheetId, readRange, logger)
+type SheetsClient interface {
+	GetValues() (*sheets.ValueRange, error)
+}
 
-  if err != nil {
-    logger.Error("error create service", slog.Any("error", err))
-    return nil, err
-  }
 
-  return &GoogleSheetsService{client: client, logger: logger, repository: repository}, nil
+func NewGoogleSheetsService(sheetsClient SheetsClient, logger *slog.Logger, repository *event.EventRepository) (*GoogleSheetsService, error) { // (client *SheetsClient, logger *slog.Logger, repository *event.EventRepository) (*GoogleSheetsService, error) {
+
+  return &GoogleSheetsService{sheetsClient: sheetsClient, logger: logger, repository: repository}, nil
 }
 
 func (s *GoogleSheetsService) GetSheets(ctx context.Context) ([]domain.GoogleSheetElement, error){
-  v, err := s.client.GetValues()
+  v, err := s.sheetsClient.GetValues()
 
   if err != nil {
     s.logger.Error("error get values", slog.Any("error", err))
@@ -76,10 +75,3 @@ func (s *GoogleSheetsService) SyncSheets(ctx context.Context) error {
   s.logger.Info("sync sheets success")
   return nil
 }
-
-
-
-func (s *GoogleSheetsService) CheckEventsToday() error {
-  panic("not implement")
-}
-
