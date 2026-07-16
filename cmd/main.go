@@ -22,7 +22,7 @@ func main() {
 
 	db, err := postgres.NewClient(context.Background(), cfg.PostgresConnStr)
 
-  repository := event.NewEventRepository(db)
+  repository := event.NewEventRepository(db, log)
 
 	if err != nil {
 	  log.Error("error connect to postgres", slog.Any("error", err))

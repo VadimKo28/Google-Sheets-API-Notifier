@@ -4,17 +4,17 @@ import (
 	"context"
 	"fmt"
 	"google_sheets_api/internal/domain"
-
-	"github.com/jackc/pgx/v5"
+	"log/slog"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type EventRepository struct {
     db *pgxpool.Pool 
+	logger *slog.Logger
 }
 
-func NewEventRepository(db *pgxpool.Pool) *EventRepository {
-    return &EventRepository{db: db}
+func NewEventRepository(db *pgxpool.Pool, logger *slog.Logger) *EventRepository {
+    return &EventRepository{db: db, logger: logger}
 }
 
 func (r *EventRepository) Save(ctx context.Context, rows []domain.GoogleSheetElement) error {
@@ -24,30 +24,50 @@ func (r *EventRepository) Save(ctx context.Context, rows []domain.GoogleSheetEle
 
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx: %w", err)
+	  r.logger.Error("failed to begin tx", slog.Any("error", err))
+	  return fmt.Errorf("failed to begin tx: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
-	batch := &pgx.Batch{}
-	for _, row := range rows {
-		batch.Queue(
-			`INSERT INTO events (event_date, name, execute) 
-			 VALUES ($1, $2, $3)
-			 ON CONFLICT (event_date) DO NOTHING`,
-			row.Date, row.Name, row.Execute,
-		)
-	}
+	const query = `
+		INSERT INTO events (event_date, name, execute)
+		VALUES ($1, $2, $3)
+		ON CONFLICT (event_date) DO NOTHING`
 
-	br := tx.SendBatch(ctx, batch)
-	for i := 0; i < len(rows); i++ {
-		if _, err := br.Exec(); err != nil {
-			br.Close()
-			return fmt.Errorf("failed to insert row %d (%s): %w", i, rows[i].Name, err)
+		
+	for i, row := range rows {
+		if _, err := tx.Exec(ctx, query, row.Date, row.Name, row.Execute); err != nil {
+      r.logger.Error("failed to insert row", slog.Any("error", err))
+			return fmt.Errorf("failed to insert row %d (%s): %w", i, row.Name, err)
 		}
-	}
-	if err := br.Close(); err != nil {
-		return fmt.Errorf("failed to close batch: %w", err)
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (r *EventRepository) GetAll(ctx context.Context) ([]domain.GoogleSheetElement, error) {
+  query := `
+    SELECT event_date, name, execute
+    FROM events
+  `
+  rows, err := r.db.Query(ctx, query)
+  
+  if err != nil {
+    r.logger.Error("error get all events", slog.Any("error", err))
+    return nil, err
+  }
+  defer rows.Close()
+
+  events := make([]domain.GoogleSheetElement, 0)
+
+  for rows.Next() {
+    var event domain.GoogleSheetElement
+    if err := rows.Scan(&event.Date, &event.Name, &event.Execute); err != nil {
+      r.logger.Error("error scan row", slog.Any("error", err))
+      return nil, err
+    }
+    events = append(events, event)
+  }
+
+  return events, nil
 }

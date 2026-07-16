@@ -10,7 +10,8 @@ type Handler struct {
 }
 
 type GoogleSheets interface {
-  SyncSheets(c context.Context)( error)
+  SyncSheets(c context.Context) error
+  CheckEventsToday() error
 }
 
 func New(service GoogleSheets) *Handler {
@@ -26,6 +27,17 @@ func (h *Handler) SyncSheets(c *gin.Context) {
 	c.JSON(500, err)
 	return
   }
+
+  c.JSON(200, nil)
+}
+
+func (h *Handler) CheckEvents(c *gin.Context) {
+  err := h.servise.CheckEventsToday()
+
+  if err != nil {
+	c.JSON(500, err)
+	return
+  }	
 
   c.JSON(200, nil)
 }

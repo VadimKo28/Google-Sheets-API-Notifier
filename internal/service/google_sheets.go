@@ -39,20 +39,26 @@ func (s *GoogleSheetsService) GetSheets(ctx context.Context) ([]domain.GoogleShe
 
   mapData, err := mapper.MapRowsToEvents(rawData)
 
+  if err != nil {
+    s.logger.Error("error map rows to events", slog.Any("error", err))
+    return nil, err
+  }
+
   return mapData, err
 }
 
-func (s *GoogleSheetsService) SaveEvents(ctx context.Context, events []domain.GoogleSheetElement) error {
+func (s *GoogleSheetsService) SaveSheets(ctx context.Context, events []domain.GoogleSheetElement) error {
 
   if err := s.repository.Save(ctx, events); err != nil {
     s.logger.Error("error save events", slog.Any("error", err))
     return err
   }
 
+  s.logger.Info("save events success")
   return nil
 }
 
-func (s *GoogleSheetsService) SyncSheets(ctx context.Context) error{
+func (s *GoogleSheetsService) SyncSheets(ctx context.Context) error {
   sheets, err := s.GetSheets(ctx)
 
   if err != nil {
@@ -60,14 +66,20 @@ func (s *GoogleSheetsService) SyncSheets(ctx context.Context) error{
     return err
   }
 
-  s.SaveEvents(ctx, sheets)
+  err = s.SaveSheets(ctx, sheets)
 
+  if err != nil {
+    s.logger.Error("error sync sheets", slog.Any("error", err))
+    return err
+  }
+
+  s.logger.Info("sync sheets success")
   return nil
 }
 
 
 
-func (s *GoogleSheetsService) SendMail() {
+func (s *GoogleSheetsService) CheckEventsToday() error {
   panic("not implement")
 }
 
