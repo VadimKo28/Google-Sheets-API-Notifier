@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"google_sheets_api/internal/config"
-	"google_sheets_api/internal/handler"
+	"google_sheets_api/internal/handler/events"
+	"google_sheets_api/internal/handler/sheets"
 	"google_sheets_api/internal/lib/logger"
 	"google_sheets_api/internal/repository/event"
 	"google_sheets_api/internal/server"
@@ -57,8 +58,9 @@ func main() {
 		return
 	}
 
-	handler := handler.New(googleSheetsService, eventNotifierService)
-	server := server.New(handler, gin.New())
+	sheetsHandler := sheets.NewHandler(googleSheetsService)
+	eventsHandler := events.NewHandler(eventNotifierService)
+	server := server.New(sheetsHandler, eventsHandler, gin.New())
 	server.Register()
 
 	server.Run()
