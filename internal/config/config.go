@@ -2,55 +2,28 @@ package config
 
 import (
 	"log"
-	"os"
-
+	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	SpreadsSheetID  string
-	ReadRange       string
-	AppPassword     string
-	GmailUser       string
-	PostgresConnStr string
+	SpreadsSheetID  string `env:"GOOGLE_SPREADS_SHEET_ID,notEmpty"`
+	ReadRange       string `env:"GOOGLE_SHEET_READ_RANGE,notEmpty"` 
+	AppPassword     string `env:"GMAIL_APP_PASSWORD,notEmpty"`
+	GmailUser       string `env:"GMAIL_USER,notEmpty"`
+	PostgresConnStr string `env:"DB_STRING,notEmpty"`
 }
 
 func NewConfig() *Config {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("No .env file found")
+		log.Fatal(err)
 	}
 
-	spreadsheetId := os.Getenv("GOOGLE_SPREADS_SHEET_ID")
-	readRange := os.Getenv("GOOGLE_SHEET_READ_RANGE")
-	appPassword := os.Getenv("GMAIL_APP_PASSWORD")
-	gmailUser := os.Getenv("GMAIL_USER")
-	postgresConnStr := os.Getenv("DB_STRING")
+	cfg := Config{} 
 
-	if postgresConnStr == "" {
-		log.Fatal("DB_STRING не задан в переменных окружения")
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatal(err)
 	}
 
-	if gmailUser == "" {
-		log.Fatal("GMAIL_USER не задан в переменных окружения")
-	}
-
-	if appPassword == "" {
-		log.Fatal("GMAIL_APP_PASSWORD не задан в переменных окружения")
-	}
-
-	if spreadsheetId == "" {
-		log.Fatal("GOOGLE_SPREADS_SHEET_ID не задан в переменных окружения")
-	}
-
-	if readRange == "" {
-		log.Fatal("GOOGLE_SHEET_READ_RANGE не задан в переменных окружения")
-	}
-
-	return &Config{
-		SpreadsSheetID:  spreadsheetId,
-		ReadRange:       readRange,
-		AppPassword:     appPassword,
-		GmailUser:       gmailUser,
-		PostgresConnStr: postgresConnStr,
-	}
+	return &cfg
 }
