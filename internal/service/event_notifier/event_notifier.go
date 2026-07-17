@@ -9,10 +9,10 @@ import (
 )
 
 type EventNotifierService struct {
-  logger *slog.Logger
-  repository EventReader
-  mailer Mailer
-  config config.Config
+	logger     *slog.Logger
+	repository EventReader
+	mailer     Mailer
+	config     config.Config
 }
 
 type EventReader interface {
@@ -24,21 +24,21 @@ type Mailer interface {
 }
 
 func NewEventNotifierService(config config.Config, logger *slog.Logger, repository EventReader, mailer Mailer) *EventNotifierService {
-  return &EventNotifierService{config: config, logger: logger, repository: repository, mailer: mailer}
+	return &EventNotifierService{config: config, logger: logger, repository: repository, mailer: mailer}
 }
 
 func (s *EventNotifierService) CheckEventsToday(ctx context.Context) error {
-  today := time.Now()
+	today := time.Now()
 
-  events, err := s.repository.GetByDate(ctx, today)
-  if err != nil {
-	  s.logger.Error("error get events for today", slog.Any("error", err))
-	  return err
-  }
+	events, err := s.repository.GetByDate(ctx, today)
+	if err != nil {
+		s.logger.Error("error get events for today", slog.Any("error", err))
+		return err
+	}
 
-  if len(events) == 0 {
-	  s.logger.Info("no events today")
-	  return nil
+	if len(events) == 0 {
+		s.logger.Info("no events today")
+		return nil
 	}
 
 	for _, e := range events {

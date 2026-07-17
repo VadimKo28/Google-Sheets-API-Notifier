@@ -18,39 +18,39 @@ import (
 )
 
 func main() {
-  cfg := config.NewConfig()
+	cfg := config.NewConfig()
 
-  spreadsheetId := cfg.SpreadsSheetID
-  readRange := cfg.ReadRange
+	spreadsheetId := cfg.SpreadsSheetID
+	readRange := cfg.ReadRange
 
-  log := logger.LoggerSetup()
+	log := logger.LoggerSetup()
 
-  sheetsClient, err := sheets_client.NewClient(context.Background(), spreadsheetId, readRange, log)
-
-  if err != nil {
-    log.Error("error create service", slog.Any("error", err))
-    return
-  }
-
-  dbClient, err := postgres.NewClient(context.Background(), cfg.PostgresConnStr)
-  mailClient := gmail.NewClient(
-    cfg.GmailUser,  
-    cfg.AppPassword, 
-    cfg.GmailUser,
-	  log,
-  )
-
-  repository := event.NewEventRepository(dbClient, log)
+	sheetsClient, err := sheets_client.NewClient(context.Background(), spreadsheetId, readRange, log)
 
 	if err != nil {
-	  log.Error("error connect to postgres", slog.Any("error", err))
-	  return
-	} else {
-	  log.Info("connect to postgres")
+		log.Error("error create service", slog.Any("error", err))
+		return
 	}
 
-  googleSheetsService, err := google_sheets.NewGoogleSheetsService(sheetsClient, log, repository)
-  eventNotifierService := event_notifier.NewEventNotifierService(*cfg, log, repository, mailClient)
+	dbClient, err := postgres.NewClient(context.Background(), cfg.PostgresConnStr)
+	mailClient := gmail.NewClient(
+		cfg.GmailUser,
+		cfg.AppPassword,
+		cfg.GmailUser,
+		log,
+	)
+
+	repository := event.NewEventRepository(dbClient, log)
+
+	if err != nil {
+		log.Error("error connect to postgres", slog.Any("error", err))
+		return
+	} else {
+		log.Info("connect to postgres")
+	}
+
+	googleSheetsService, err := google_sheets.NewGoogleSheetsService(sheetsClient, log, repository)
+	eventNotifierService := event_notifier.NewEventNotifierService(*cfg, log, repository, mailClient)
 
 	if err != nil {
 		log.Error("error create service", slog.Any("error", err))
@@ -60,6 +60,6 @@ func main() {
 	handler := handler.New(googleSheetsService, eventNotifierService)
 	server := server.New(handler, gin.New())
 	server.Register()
-  
-  server.Run()
+
+	server.Run()
 }

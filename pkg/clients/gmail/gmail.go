@@ -1,14 +1,14 @@
 package gmail
 
 import (
-	"log/slog"
 	"gopkg.in/gomail.v2"
+	"log/slog"
 )
 
 type GMailClient struct {
-  dialer *gomail.Dialer
-  from string
-  logger *slog.Logger
+	dialer *gomail.Dialer
+	from   string
+	logger *slog.Logger
 }
 
 func NewClient(username, appPassword, from string, logger *slog.Logger) *GMailClient {

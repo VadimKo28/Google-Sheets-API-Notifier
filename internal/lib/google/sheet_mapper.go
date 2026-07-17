@@ -11,15 +11,15 @@ func MapRowsToEvents(raw [][]interface{}) ([]domain.GoogleSheetElement, error) {
 
 	for _, r := range raw {
 		if len(r) < 2 {
-			continue 
+			continue
 		}
 
 		date := fmt.Sprint(r[0])
 		name := fmt.Sprint(r[1])
 
 		events = append(events, domain.GoogleSheetElement{
-			Date: date,
-			Name: name,
+			Date:     date,
+			Name:     name,
 			Complete: false,
 		})
 	}
