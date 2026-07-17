@@ -32,13 +32,13 @@ func (r *EventRepository) Save(ctx context.Context, rows []domain.GoogleSheetEle
 	defer tx.Rollback(ctx)
 
 	const query = `
-		INSERT INTO events (event_date, name, execute)
+		INSERT INTO events (event_date, name, complete)
 		VALUES ($1, $2, $3)
 		ON CONFLICT (event_date) DO NOTHING`
 
 		
 	for i, row := range rows {
-		if _, err := tx.Exec(ctx, query, row.Date, row.Name, row.Execute); err != nil {
+		if _, err := tx.Exec(ctx, query, row.Date, row.Name, row.Complete); err != nil {
       r.logger.Error("failed to insert row", slog.Any("error", err))
 			return fmt.Errorf("failed to insert row %d (%s): %w", i, row.Name, err)
 		}
@@ -51,7 +51,7 @@ func (r *EventRepository) GetByDate(ctx context.Context, date time.Time) ([]doma
   dateStr := date.Format("02.01")
 
 	rows, err := r.db.Query(ctx,
-		`SELECT event_date, name, execute FROM events WHERE event_date = $1`,
+		`SELECT event_date, name, complete FROM events WHERE event_date = $1`,
 		dateStr,
 	)
 	if err != nil {
@@ -63,7 +63,7 @@ func (r *EventRepository) GetByDate(ctx context.Context, date time.Time) ([]doma
 	var events []domain.GoogleSheetElement
 	for rows.Next() {
 		var e domain.GoogleSheetElement
-		if err := rows.Scan(&e.Date, &e.Name, &e.Execute); err != nil {
+		if err := rows.Scan(&e.Date, &e.Name, &e.Complete); err != nil {
       r.logger.Error("failed to scan event", slog.Any("error", err))
 			return nil, fmt.Errorf("failed to scan event: %w", err)
 		}

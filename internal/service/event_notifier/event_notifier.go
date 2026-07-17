@@ -2,6 +2,7 @@ package event_notifier
 
 import (
 	"context"
+	"google_sheets_api/internal/config"
 	"google_sheets_api/internal/domain"
 	"log/slog"
 	"time"
@@ -11,6 +12,7 @@ type EventNotifierService struct {
   logger *slog.Logger
   repository EventReader
   mailer Mailer
+  config config.Config
 }
 
 type EventReader interface {
@@ -21,8 +23,8 @@ type Mailer interface {
 	Send(to string, subject string, body string) error
 }
 
-func NewEventNotifierService(logger *slog.Logger, repository EventReader, mailer Mailer) *EventNotifierService {
-  return &EventNotifierService{logger: logger, repository: repository, mailer: mailer}
+func NewEventNotifierService(config config.Config, logger *slog.Logger, repository EventReader, mailer Mailer) *EventNotifierService {
+  return &EventNotifierService{config: config, logger: logger, repository: repository, mailer: mailer}
 }
 
 func (s *EventNotifierService) CheckEventsToday(ctx context.Context) error {
@@ -40,7 +42,7 @@ func (s *EventNotifierService) CheckEventsToday(ctx context.Context) error {
 	}
 
 	for _, e := range events {
-		if err := s.mailer.Send("someone@example.com", "Событие сегодня", e.Name); err != nil {
+		if err := s.mailer.Send(s.config.GmailUser, "Событие сегодня", e.Name); err != nil {
 			s.logger.Error("error send mail", slog.Any("error", err), slog.String("event", e.Name))
 			return err
 		}

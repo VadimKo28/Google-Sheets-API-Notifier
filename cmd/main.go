@@ -18,12 +18,12 @@ import (
 )
 
 func main() {
-	cfg := config.NewConfig()
+  cfg := config.NewConfig()
 
   spreadsheetId := cfg.SpreadsSheetID
-	readRange := cfg.ReadRange
+  readRange := cfg.ReadRange
 
-	log := logger.LoggerSetup()
+  log := logger.LoggerSetup()
 
   sheetsClient, err := sheets_client.NewClient(context.Background(), spreadsheetId, readRange, log)
 
@@ -32,7 +32,7 @@ func main() {
     return
   }
 
-	dbClient, err := postgres.NewClient(context.Background(), cfg.PostgresConnStr)
+  dbClient, err := postgres.NewClient(context.Background(), cfg.PostgresConnStr)
   mailClient := gmail.NewClient(
     cfg.GmailUser,  
     cfg.AppPassword, 
@@ -49,8 +49,8 @@ func main() {
 	  log.Info("connect to postgres")
 	}
 
-	googleSheetsService, err := google_sheets.NewGoogleSheetsService(sheetsClient, log, repository)
-  eventNotifierService := event_notifier.NewEventNotifierService(log, repository, mailClient)
+  googleSheetsService, err := google_sheets.NewGoogleSheetsService(sheetsClient, log, repository)
+  eventNotifierService := event_notifier.NewEventNotifierService(*cfg, log, repository, mailClient)
 
 	if err != nil {
 		log.Error("error create service", slog.Any("error", err))
